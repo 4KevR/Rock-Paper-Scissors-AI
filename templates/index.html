@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+    		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+		<link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+	</head>
+	<body>
+	<p class="h1 text-center">Rock-Paper-Scissors</p>
+	
+	<div class="container text-center">
+		<button id="snap" class="btn btn-primary">Aufnahme!</button>
+	</div>
+
+	<br/>
+
+	<div class="row">
+		<div class="col container text-center">
+			<div class="container text-center">
+				<img id="computerImage"></img>
+			</div>
+		</div>
+		<div class="text-center container col">
+			<div class="container text-center">
+				<video class="text-center container" autoplay="true" id="videoElement" width="625" height="455"></video>
+				<canvas id="canvas" width="640" height="480" style="display:None"></canvas>
+		
+			</div>
+		</div>
+	</div>
+	<div class="row">
+		<div class="container col-sm text-center">
+			<p id="computerResult">-</p>
+		</div>
+		<div class="container col-sm text-center">
+			<p id="playerResult">-</p>
+		</div>	
+	</div>
+	<div class="container text-center">
+		<p id="comparison"></p>
+	</div>
+	<div class="row">
+		<div class="container col-sm text-center">
+			<p id="computerPoints">0</p>
+		</div>
+		<div class="container col-sm text-center">
+			<p>-</p>
+		</div>
+		<div class="container col-sm text-center">
+			<p id="playerPoints">0</p>
+		</div>	
+	</div>
+	
+	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+	<script type="text/javascript">
+
+	window.addEventListener("load",function(){
+	
+		var video = document.querySelector("#videoElement");
+
+		if (navigator.mediaDevices.getUserMedia) {
+		  navigator.mediaDevices.getUserMedia({ video: true })
+		    .then(function (stream) {
+		      video.srcObject = stream;
+		    })
+		    .catch(function (err0r) {
+		      console.log("Something went wrong!");
+		    });
+		}
+
+		// Elements for taking the snapshot
+		var canvas = document.getElementById('canvas');
+		var context = canvas.getContext('2d');
+
+		// Trigger photo take
+		document.getElementById("snap").addEventListener("click", function() {
+			context.drawImage(video, 0, 0, 640, 480);
+			var dataURL = canvas.toDataURL("image/jpeg")
+
+			$.ajax({
+				type:"POST",
+				url:"/image",
+				data: {
+					"imgBase64": dataURL
+				},
+				success: function(data) {
+					var img = document.getElementById("computerImage");
+					var computerResult = document.getElementById("computerResult");
+					var playerResult = document.getElementById("playerResult");
+					var comparison = document.getElementById("comparison")
+
+					var newImg; 
+
+					if (data.computerDecision == "r") {
+						newImg = "static/rock.jpg"; 
+						computerResult.innerHTML = "Rock"
+					} else if (data.computerDecision == "p") {
+						newImg = "static/paper.jpg";
+						computerResult.innerHTML = "Paper"
+					} else if (data.computerDecision == "s") {
+						newImg = "static/scissor.jpg"
+						computerResult.innerHTML = "Scissors"
+					}
+
+					if (data.label == "r") {
+						playerResult.innerHTML = "Rock"
+					} else if (data.label == "p") {
+						playerResult.innerHTML = "Paper"
+					} else if (data.label == "s") {
+						playerResult.innerHTML = "Scissors"
+					} 
+
+					playerResult.innerHTML += " with " + data.confidence + "% confidence"
+
+					img.src = newImg
+					comparison.innerHTML = data.playerResult
+				
+					var computerPoints = document.getElementById("computerPoints")
+					var playerPoints = document.getElementById("playerPoints")
+
+					computerPoints.innerHTML = data.computerPoints;
+					playerPoints.innerHTML = data.playerPoints;
+				}
+			}).done(function(o){
+				console.log("saved")
+			})
+		});
+
+		
+	
+	
+	},false)
+
+	</script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+	</body>
+</html>
